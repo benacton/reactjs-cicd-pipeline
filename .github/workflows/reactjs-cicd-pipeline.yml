@@ -19,11 +19,17 @@ jobs:
 #       - run: echo "🍏 This job's status is ${{ job.status }}."
     
 
-  print-secrets:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Retrieve secret
-        env:
-          fullname: ${{ secrets.FULLNAME }}
-        run: |
-          echo "$fullname"
+#   print-secrets:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Retrieve secret
+#         env:
+#           fullname: ${{ secrets.FULLNAME }}
+#         run: |
+#           echo "$fullname"
+    packages:
+        runs-on: ubuntu-latest
+        steps:
+            - run: ./setup.sh
+
+        
