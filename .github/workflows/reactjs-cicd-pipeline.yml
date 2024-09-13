@@ -15,3 +15,21 @@ jobs:
       - uses: actions/checkout@v2
       - name: Init
         run: echo "Echo Deploying Update"
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        env:
+          SSH_USER: ${{ secrets.EC2_USER }}
+        with:
+          host: ${{ secrets.EC2_IP}}
+          username: ${{ secrets.AWS_SSH_KEY }}
+          port: 22
+          key: ${{ secrets.AWS_SSH_KEY }}
+          script: |
+            echo "deploying to prod with key lumen-jobs.pem"
+            eval `ssh-agent` && ssh-add "/home/ubuntu/.ssh/lumen-jobs.pem"
+            cd /
+            sudo chown -R deploy_user: .
+            sh deploy_scripts/update.sh prod
+            sudo chown -R www-data: .
+            echo "successfully done!"
