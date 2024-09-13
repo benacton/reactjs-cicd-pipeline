@@ -1,35 +1,47 @@
 name: Deploy on AWS EC2 Instance
-# Trigger the workflow on push and
-# pull request events on the production branch
+
 on:
   push:
     branches:
       - main
 
-# Authenticate to the the server via ssh
-# and run our deployment script
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Init
-        run: echo "Echo Deploying Update"
 
-      - name: Deploy to server
+      - name: Echo Deployment Start
+        run: echo "Deploying update to AWS EC2"
+
+      - name: Deploy to server via SSH
         uses: appleboy/ssh-action@master
-        env:
-          SSH_USER: ${{ secrets.EC2_USER }}
         with:
-          host: ${{ secrets.EC2_IP}}
-          username: ${{ secrets.AWS_SSH_KEY }}
+          host: ${{ secrets.EC2_IP }}                # Your EC2 instance's IP address
+          username: ${{ secrets.EC2_USER }}           # The username to connect to EC2 (e.g., ubuntu, ec2-user)
           port: 22
-          key: ${{ secrets.AWS_SSH_KEY }}
+          key: ${{ secrets.AWS_SSH_KEY }}             # Your private SSH key stored in GitHub Secrets
           script: |
-            echo "deploying to prod with key lumen-jobs.pem"
-            eval `ssh-agent` && ssh-add "/home/ubuntu/.ssh/lumen-jobs.pem"
-            cd /
-            sudo chown -R deploy_user: .
-            sh deploy_scripts/update.sh prod
-            sudo chown -R www-data: .
-            echo "successfully done!"
+            echo "Deploying to production server"
+            
+            # Define project directory and repository URL
+            PROJECT_DIR="/var/www/"
+            REPO_URL="https://github.com/benacton/reactjs-cicd-pipeline.git"
+
+            # Check if project directory exists
+            if [ -d "$PROJECT_DIR" ]; then
+                echo "Directory exists. Pulling latest updates..."
+                cd "$PROJECT_DIR"
+                git pull origin main
+            else
+                echo "Directory does not exist. Cloning repository..."
+                git clone "$REPO_URL" "$PROJECT_DIR"
+                cd "$PROJECT_DIR"
+            fi
+
+            # Run deployment script after pulling or cloning
+            # sudo chown -R deploy_user: .
+            # sudo chown -R www-data: .
+
+            echo "Deployment successfully completed!"
+
