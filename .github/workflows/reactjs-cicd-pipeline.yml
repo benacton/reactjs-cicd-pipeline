@@ -31,7 +31,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - run: |
-                chmod +x ./setup.sh
-                ./setup.sh
+                chmod +x ./.github/workflows/setup.sh
+                ./.github/workflows/setup.sh
 
         
