@@ -30,6 +30,8 @@ jobs:
     packages:
         runs-on: ubuntu-latest
         steps:
-            - run: ./setup.sh
+            - run: |
+                chmod +x ./setup.sh
+                ./setup.sh
 
         
