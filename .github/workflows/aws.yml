@@ -29,15 +29,20 @@ jobs:
           USER: ${{ secrets.EC2_USER }}
           KEY: ${{ secrets.AWS_SSH_KEY }}
         run: |
-          cd /var
-          mkdir www && cd www
-          touch index.html
+            ssh -i "${{ env.KEY }}" ${{ env.USER }}@${{ env.HOST }} << 'EOF'
+                # Check if the /var/www directory exists, create if it doesn't
+                if [ ! -d /var/www ]; then
+                    sudo mkdir /var/www
+                fi
+                
+                # Ensure the current user has write permissions
+                sudo chown $USER:$USER /var/www
+                
+                # Create the index.html file
+                cd /var/www
+                touch index.html
+                
+                # Set appropriate permissions
+                sudo chmod 644 index.html
+            EOF
             
-        #   chmod 600 ssh_key.pem
-        #   scp -i ssh_key.pem -o StrictHostKeyChecking=no -r ./* ${USER}@${HOST}:~/app/
-        #   ssh -i ssh_key.pem -o StrictHostKeyChecking=no ${USER}@${HOST} '
-        #     cd ~/app
-        #     # Add your deployment commands here, for example:
-        #     # npm install
-        #     # pm2 restart app
-        #   '
