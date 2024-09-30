@@ -30,7 +30,7 @@ jobs:
           USER: ${{ secrets.EC2_USER }}
         run: |
           # Create the SSH private key from the secret
-          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          echo "$PRIVATE_KEY" > ~/.ssh/github && chmod 600 ~/.ssh/github
 
           # Add the server to the list of known hosts
           ssh-keyscan -H ${{ secrets.EC2_IP }} >> ~/.ssh/known_hosts
