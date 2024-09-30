@@ -2,10 +2,7 @@ name: Deploy to Amazon EC2
 
 on:
   push:
-    branches: [main] # or your default branch
-
-# env:
-#   AWS_REGION: us-east-1 # or your preferred region
+    branches: [main]
 
 jobs:
   deploy:
@@ -16,33 +13,29 @@ jobs:
       - name: Checkout the files
         uses: actions/checkout@v3
 
-    #   - name: Configure AWS credentials
-    #     uses: aws-actions/configure-aws-credentials@v1
-    #     with:
-    #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #       aws-region: ${{ env.AWS_REGION }}
+      - name: Create SSH Key File
+        run: |
+          echo "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/aws_key.pem
+          chmod 600 ~/.ssh/aws_key.pem
 
       - name: Deploy to EC2
         env:
           HOST: ${{ secrets.EC2_IP }}
           USER: ${{ secrets.EC2_USER }}
-          KEY: ${{ secrets.AWS_SSH_KEY }}
         run: |
-            ssh -i "${{ env.KEY }}" ${{ env.USER }}@${{ env.HOST }} << 'EOF'
-                # Check if the /var/www directory exists, create if it doesn't
-                if [ ! -d /var/www ]; then
-                    sudo mkdir /var/www
-                fi
-                
-                # Ensure the current user has write permissions
-                sudo chown $USER:$USER /var/www
-                
-                # Create the index.html file
-                cd /var/www
-                touch index.html
-                
-                # Set appropriate permissions
-                sudo chmod 644 index.html
-            EOF
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/aws_key.pem ${{ env.USER }}@${{ env.HOST }} << 'EOF'
+            # Check if the /var/www directory exists, create if it doesn't
+            if [ ! -d /var/www ]; then
+              sudo mkdir /var/www
+            fi
             
+            # Ensure the current user has write permissions
+            sudo chown $USER:$USER /var/www
+            
+            # Create the index.html file
+            cd /var/www
+            touch index.html
+            
+            # Set appropriate permissions
+            sudo chmod 644 index.html
+          EOF
