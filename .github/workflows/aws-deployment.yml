@@ -22,7 +22,8 @@ jobs:
           ssh-private-key: ${{ secrets.AWS_SSH_KEY }}
 
       - name: Add known hosts
-        run: echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.EC2_IP }} >> ~/.ssh/known_hosts
 
       # Step 3: Deploy application
       - name: Deploy application    
@@ -31,28 +32,14 @@ jobs:
           USER: ${{ secrets.EC2_USER }}
           REPO_DIR: "/var/www/" # Adjust to where you want the code
         run: |
-            echo "Successfully connected!"
-            mkdir /var/www/ && cd /var/www/
-            chmod 700 /var/www
-            touch inde.html
-        #   ssh $USER@$HOST '
-        #     if [ ! -d "$REPO_DIR" ]; then
-        #       echo "First-time deployment..."
-        #       git clone git@github.com:${{ github.repository }}.git $REPO_DIR
-        #       cd $REPO_DIR
-        #       git checkout main
-        #       sudo apt-get update
-        #       sudo apt-get install -y nginx
-        #       sudo cp $REPO_DIR/nginx.conf /etc/nginx/sites-available/default
-        #       sudo systemctl restart nginx
-        #     else
-        #       echo "Pulling latest changes..."
-        #       cd $REPO_DIR
-        #       git pull origin main
-        #     fi
-        #     echo "Deployment complete."
-        #   '
+          ssh $USER@$HOST "
+            echo 'Successfully connected!'
+            mkdir -p $REPO_DIR
+            chmod 700 $REPO_DIR
+            touch $REPO_DIR/index.html
+            echo 'Deployment complete.'
+          "
 
-      # Step 4: Verify deployment
-    #   - name: Verify deployment
-    #     run: ssh $USER@$HOST 'curl -I http://localhost'
+      # Optional: Verify deployment (if applicable)
+      # - name: Verify deployment
+      #   run: ssh $USER@$HOST 'curl -I http://localhost'
