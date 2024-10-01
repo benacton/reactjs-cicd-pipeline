@@ -16,9 +16,9 @@ jobs:
             
             - name: Deploy to server
               env:
-                HOST: ${{ secrets.HOST }}
-                USER: ${{ secrets.USER }}
-                REPO_DIR: /var/www
+                HOST: ${{ secrets.EC2_IP }}
+                USER: ${{ secrets.EC2_USER }}
+                REPO_DIR: reactjs-cicd-pipeline # Add repo name
               run: |
                 ssh $USER@$HOST << EOF
                     if [ ! -d "$REPO_DIR" ]; then
