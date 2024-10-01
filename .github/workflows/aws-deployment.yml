@@ -1,0 +1,54 @@
+name: Automated Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Install SSH key and configure known_hosts
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.AWS_SSH_KEY }}
+
+      - name: Add known hosts
+        run: echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      # Step 3: Deploy application
+      - name: Deploy application
+        env:
+          HOST: ${{ secrets.EC2_IP }}
+          USER: ${{ secrets.EC2_USER }}
+          REPO_DIR: "/var/www/" # Adjust to where you want the code
+        run: |
+          ssh $USER@$HOST '
+            if [ ! -d "$REPO_DIR" ]; then
+              echo "First-time deployment..."
+              git clone git@github.com:${{ github.repository }}.git $REPO_DIR
+              cd $REPO_DIR
+              git checkout main
+              sudo apt-get update
+              sudo apt-get install -y nginx
+              sudo cp $REPO_DIR/nginx.conf /etc/nginx/sites-available/default
+              sudo systemctl restart nginx
+            else
+              echo "Pulling latest changes..."
+              cd $REPO_DIR
+              git pull origin main
+            fi
+            echo "Deployment complete."
+          '
+
+      # Step 4: Verify deployment
+      - name: Verify deployment
+        run: ssh $USER@$HOST 'curl -I http://localhost'
