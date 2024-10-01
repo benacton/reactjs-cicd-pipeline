@@ -31,5 +31,5 @@ jobs:
             - name: Share artifact inside workflow
               uses: actions/upload-artifact@v4
               with:
-                name: react-github-actions-build
+                name: Share artifact inside workflow
                 path: build
