@@ -1,0 +1,42 @@
+name: Automated Deployment
+
+on:
+    push:
+        branches: [ main ]
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Install SSH key
+              uses: actions/checkout@v2
+              with:
+                key: ${{ secrets.AWS_SSH_KEY }}
+                hosts: ${{ secrets.EC2_IP }}
+            
+            - name: Deploy to server
+              env:
+                HOST: ${{ secrets.HOST }}
+                USER: ${{ secrets.USER }}
+                REPO_DIR: /var/www
+              run: |
+                ssh $USER@$HOST << EOF
+                    if [ ! -d "$REPO_DIR" ]; then
+                        # Initial deployment
+                        git clone https://github.com/${{ github.repository }}.git $REPO_DIR
+                        cd $REPO_DIR
+
+                        # Install and configure Nginx
+                        sudo apt-get update
+                        sudo apt-get install -y nginx
+                        sudo cp nginx.conf /etc/nginx/sites-available/default
+                        sudo systemctl restart nginx
+                    else
+                        # Subsequent deployments
+                        cd $REPO_DIR
+                        git pull origin main
+                    fi
+
+                    # Add any additional deployment steps here (e.g., restarting services)
+                EOF 
+            
